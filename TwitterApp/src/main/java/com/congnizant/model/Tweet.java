@@ -1,5 +1,7 @@
 package com.congnizant.model;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -19,7 +21,7 @@ public class Tweet {
      private String tweetText; 
      @OneToMany(cascade=CascadeType.ALL, fetch = FetchType.LAZY)
      private List<User> likeTweet;
-     
+     private Date createdDate;
      @ManyToOne
      private User user;
      
@@ -57,10 +59,20 @@ public class Tweet {
 	public void setUser(User user) {
 		this.user = user;
 	}
+	
+	
+	public Date getCreatedDate() {
+		return createdDate;
+	}
+	public void setCreatedDate(Date createdDate) {
+		this.createdDate = createdDate;
+	}
 	@Override
 	public String toString() {
-		return "Tweet [tweetId=" + tweetId + ", tweetText=" + tweetText + ", likeTweet=" + likeTweet + "]";
+		return "Tweet [tweetId=" + tweetId + ", tweetText=" + tweetText + ", likeTweet=" + likeTweet + ", createdDate="
+				+ createdDate + "]";
 	}
+	
 	
 	
 	

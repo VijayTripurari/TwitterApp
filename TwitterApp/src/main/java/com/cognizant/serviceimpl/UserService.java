@@ -1,15 +1,20 @@
 package com.cognizant.serviceimpl;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.servlet.http.HttpServletRequest;
+
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
 import com.cognizant.repository.LoginRepository;
 import com.cognizant.repository.TweetRepository;
 import com.cognizant.repository.UserRepository;
@@ -233,6 +238,7 @@ public class UserService implements IUserService {
 			User currentUser = userList.get(0);
 			Tweet tweet = new Tweet();
 			tweet.setTweetText(userTweet.getTweetText());
+			tweet.setCreatedDate(new Date());
 			currentUser.getTweet().add(tweet);
 			tweet.setUser(currentUser);
 			userRepository.save(currentUser);
@@ -301,11 +307,23 @@ public class UserService implements IUserService {
 		if (!responseEntity.getStatusCode().equals(HttpStatus.OK))
 			return responseEntity;
 		user = userRepository.findByEmail(user.getEmail()).get(0);
-		/* Stream<Tweet> tweetLimit = user.getTweet().stream().limit(10); */
 		Stream<Tweet> tweetLimit = user.getTweet().stream();
 		List<Tweet> tweetList = tweetLimit.collect(Collectors.toList());
+		tweetList.sort(new Comparator<Tweet>() {
+			@Override
+			public int compare(Tweet o1, Tweet o2) {
+				if( o1.getCreatedDate().before(o2.getCreatedDate()))
+				   return 1;
+				   else
+					   return -1;
+			}
+		});
+		List<Tweet> list = tweetList.stream()
+		.limit(10)
+		.collect(Collectors.toList());
+		
 		response.setStatus("success");
-		response.setMessage(tweetList.toString());
+		response.setMessage(list.toString());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
