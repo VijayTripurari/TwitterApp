@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cognizant.repository.UserRepository;
 import com.cognizant.response.Response;
-import com.cognizant.service.UserService;
+import com.cognizant.service.IUserService;
 import com.congnizant.model.FollowUser;
 import com.congnizant.model.TweetLike;
 import com.congnizant.model.User;
@@ -20,7 +20,7 @@ import com.congnizant.model.UserTweet;
 public class UserController {
 
 	@Autowired
-	UserService userService;
+	IUserService userService;
 	
 	@Autowired
 	UserRepository userRepository;
