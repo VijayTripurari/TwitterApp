@@ -35,26 +35,26 @@ public class UserController {
 	 return	userService.loginUser(user);
 	}
 	
-	@PostMapping("/follow")
+	@PostMapping("/secure/follow")
 	public ResponseEntity<Response>  followUser(@RequestBody final FollowUser followUser, HttpServletRequest request) {
 	return userService.followUser(followUser,request);
    }
 	
-	@PostMapping("/followers")
+	@PostMapping("/secure/followers")
 	public ResponseEntity<Response>  getFollowers(@RequestBody final User user, HttpServletRequest request) {
 		return userService.getFollowers(user,request);
 	   }
 	
-	@PostMapping("/tweet")
+	@PostMapping("/secure/tweet")
 	public ResponseEntity<Response>  tweet(@RequestBody final UserTweet userTweet, HttpServletRequest request) {
 		return userService.tweet(userTweet,request);
 	   }
 	
-	@PostMapping("/like")
+	@PostMapping("/secure/like")
 	public ResponseEntity<Response>  likeTweet(@RequestBody final TweetLike likeTweet, HttpServletRequest request) {
 		return userService.likeTweet(likeTweet,request);
 	   }
-	@PostMapping("/home")
+	@PostMapping("/secure/homeapi")
 	public ResponseEntity<Response>  home(@RequestBody final User user, HttpServletRequest request) {
 		return userService.home(user,request);
 	   }
