@@ -15,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.cognizant.exception.TokenException;
+import com.cognizant.exception.TweetException;
+import com.cognizant.exception.UserException;
 import com.cognizant.repository.LoginRepository;
 import com.cognizant.repository.TweetRepository;
 import com.cognizant.repository.UserRepository;
@@ -31,7 +34,6 @@ import com.congnizant.model.UserTweet;
 @Service
 public class UserService implements IUserService {
 	private static final Logger LOGGER = Logger.getLogger(UserService.class);
-
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
@@ -54,6 +56,10 @@ public class UserService implements IUserService {
 		Response response = new Response();
 		try {
 			LOGGER.debug("save method will persist the user object in the USER_DETAILS table");
+			if(user.getEmail() == null || user.getEmail().length()==0)
+				throw new UserException("Email can not be empty");
+			if(user.getPassword() == null || user.getPassword().length()==0)
+				throw new UserException("Password can not be empty");
 			String encodedPassword = TokenGenerator.encode(user.getPassword());
 			user.setPassword(encodedPassword);
 			User savedUser = userRepository.save(user);
@@ -62,7 +68,14 @@ public class UserService implements IUserService {
 				response.setStatus("success");
 				response.setMessage(savedUser);
 			}
-		} catch (Exception e) {
+		} 
+		catch(UserException e)
+		{
+			response.setStatus("error");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+		catch (Exception e) {
 			response.setStatus("error");
 			response.setMessage("Database error!");
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -90,6 +103,11 @@ public class UserService implements IUserService {
 		User loginUser = null;
 		LOGGER.debug("in the login method finding whether the user exists in the USER_DETAILS table or not");
 		try {
+		
+			if(user.getEmail() == null || user.getEmail().length()==0)
+				throw new UserException("Email can not be empty");
+			if(user.getPassword() == null || user.getPassword().length()==0)
+				throw new UserException("Password can not be empty");
 			List<User> userList = userRepository.findAll();
 			for (User currentUser : userList) {
 				if (currentUser.getEmail().equals(user.getEmail())
@@ -98,7 +116,14 @@ public class UserService implements IUserService {
 					loginUser = currentUser;
 				}
 			}
-		} catch (Exception e) {
+		}
+		catch(UserException e)
+		{
+			response.setStatus("error");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+		catch (Exception e) {
 			response.setStatus("error");
 			response.setMessage("Database error");
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -138,6 +163,10 @@ public class UserService implements IUserService {
 		try {
 			LOGGER.debug(
 					"below statement checks first whether the follower user id user exists in USER_dETAILS table or not");
+			if(followUser.getUser().getEmail() == null || followUser.getUser().getEmail().length()==0)
+				throw new UserException("Email can not be empty");
+			if(followUser.getUser().getPassword() == null || followUser.getUser().getPassword().length()==0)
+				throw new UserException("Password can not be empty");
 			List<User> followerList = userRepository.findByUserId(followUser.getFollowerId());
 			User follower = followerList.get(0);
 			User user = userRepository.findByEmail(followUser.getUser().getEmail()).get(0);
@@ -166,7 +195,14 @@ public class UserService implements IUserService {
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
 
-		} catch (Exception e) {
+		}
+		catch(UserException e)
+		{
+			response.setStatus("error");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+		catch (Exception e) {
 			response.setStatus("error");
 			response.setMessage("Database error!");
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -179,7 +215,6 @@ public class UserService implements IUserService {
 	 * 
 	 * This method is used for retrieving list of users who are followers of a
 	 * particular user
-	 * 
 	 * @author Vijay Kumar Tripurari
 	 * @Version 1.0
 	 * @since 2020-04-08
@@ -190,6 +225,12 @@ public class UserService implements IUserService {
 
 	public ResponseEntity<Response> getFollowers(User user, HttpServletRequest request) {
 		Response response = new Response();
+		try
+		{
+		if(user.getEmail() == null || user.getEmail().length()==0)
+			throw new UserException("Email can not be empty");
+		if(user.getPassword() == null || user.getPassword().length()==0)
+			throw new UserException("Password can not be empty");
 		User currentUser = userRepository.findByEmail(user.getEmail()).get(0);
 		ResponseEntity<Response> responseEntity = validateToken(user, request);
 		if (!responseEntity.getStatusCode().equals(HttpStatus.OK))
@@ -200,14 +241,23 @@ public class UserService implements IUserService {
 		if (!followerList.isEmpty()) {
 			response.setStatus("success");
 			response.setMessage(followerList.toString());
-
 		} else {
-
 			response.setStatus("error");
 			response.setMessage("Can not get the followers list");
 		}
+		}
+		catch(UserException e)
+		{
+			response.setStatus("error");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+		catch (Exception e) {
+			response.setStatus("error");
+			response.setMessage("Database error!");
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
-
 	}
 
 	/**
@@ -227,27 +277,30 @@ public class UserService implements IUserService {
 		if (!responseEntity.getStatusCode().equals(HttpStatus.OK))
 			return responseEntity;
 		LOGGER.debug("tweet post limited to 100 characters");
-		if (userTweet.getTweetText().length() > 100) {
+		try {
+			if (userTweet.getTweetText().length() > 100)
+				throw new TweetException("Tweet post text can not be more than 100 characters");
+			LOGGER.debug("updating the tweet details of a user");
+			LOGGER.debug("date will be updated inthe TWEET , USER_DETAILS , USER_DETAILS_TWEET tables.");
+			if (!userList.isEmpty()) {
+				User currentUser = userList.get(0);
+				Tweet tweet = new Tweet();
+				tweet.setTweetText(userTweet.getTweetText());
+				tweet.setCreatedDate(new Date());
+				currentUser.getTweet().add(tweet);
+				tweet.setUser(currentUser);
+				userRepository.save(currentUser);
+				response.setStatus("success");
+				response.setMessage("Tweet successful");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+			} else {
+				response.setStatus("error");
+				response.setMessage("Invalid user can not tweet");
+			}
+		} catch (Exception e) {
 			response.setStatus("error");
-			response.setMessage("Tweet characters can not be more than 100");
+			response.setMessage(e.getMessage());
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-		}
-		LOGGER.debug("updating the tweet details of a user");
-		LOGGER.debug("date will be updated inthe TWEET , USER_DETAILS , USER_DETAILS_TWEET tables.");
-		if (!userList.isEmpty()) {
-			User currentUser = userList.get(0);
-			Tweet tweet = new Tweet();
-			tweet.setTweetText(userTweet.getTweetText());
-			tweet.setCreatedDate(new Date());
-			currentUser.getTweet().add(tweet);
-			tweet.setUser(currentUser);
-			userRepository.save(currentUser);
-			response.setStatus("success");
-			response.setMessage("Tweet successful");
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-		} else {
-			response.setStatus("error");
-			response.setMessage("Invalid user can not tweet");
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -264,30 +317,38 @@ public class UserService implements IUserService {
 	 */
 
 	public ResponseEntity<Response> likeTweet(TweetLike likeTweet, HttpServletRequest request) {
-		List<User> userList = userRepository.findByEmail(likeTweet.getUser().getEmail());
-		List<Tweet> tweetList = tweetRepository.findByTweetId(likeTweet.getTweetId());
 		Response response = new Response();
-		ResponseEntity<Response> responseEntity = validateToken(userList.get(0), request);
-		if (!responseEntity.getStatusCode().equals(HttpStatus.OK))
-			return responseEntity;
-		LOGGER.debug("ensuring the valid user and valid tweet object submitted from request.");
-		if (!userList.isEmpty() && !tweetList.isEmpty()) {
-
-			Tweet tweet = tweetList.get(0);
-			User user = userList.get(0);
-			tweet.getLikeTweet().add(user);
-			LOGGER.debug(
-					"data gets updated in the TWEET_LIKE_TWEET table with columns tweet_tweetid , like_tweet_tweet_id");
-			tweetRepository.save(tweet);
-			response.setStatus("success");
-			response.setMessage("Like a Tweet successful");
-		} else {
+		try {
+			if (likeTweet.getUser().getEmail() == null)
+				throw new UserException("Email id is mandatory");
+			if (likeTweet.getTweetId() < 0)
+				throw new TweetException("Invalid Tweet id");
+			List<User> userList = userRepository.findByEmail(likeTweet.getUser().getEmail());
+			List<Tweet> tweetList = tweetRepository.findByTweetId(likeTweet.getTweetId());
+			ResponseEntity<Response> responseEntity = validateToken(userList.get(0), request);
+			if (!responseEntity.getStatusCode().equals(HttpStatus.OK))
+				return responseEntity;
+			LOGGER.debug("ensuring the valid user and valid tweet object submitted from request.");
+			if (!userList.isEmpty() && !tweetList.isEmpty()) {
+				Tweet tweet = tweetList.get(0);
+				User user = userList.get(0);
+				tweet.getLikeTweet().add(user);
+				LOGGER.debug(
+						"data gets updated in the TWEET_LIKE_TWEET table with columns tweet_tweetid , like_tweet_tweet_id");
+				tweetRepository.save(tweet);
+				response.setStatus("success");
+				response.setMessage("Like a Tweet successful");
+			} else {
+				response.setStatus("error");
+				response.setMessage("Invalid user or tweet");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+			}
+		} catch (Exception e) {
 			response.setStatus("error");
-			response.setMessage("Invalid user or tweet");
+			response.setMessage(e.getMessage());
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
-
 	}
 
 	/**
@@ -303,27 +364,32 @@ public class UserService implements IUserService {
 	 */
 	public ResponseEntity<Response> home(User user, HttpServletRequest request) {
 		Response response = new Response();
-		ResponseEntity<Response> responseEntity = validateToken(user, request);
-		if (!responseEntity.getStatusCode().equals(HttpStatus.OK))
-			return responseEntity;
-		user = userRepository.findByEmail(user.getEmail()).get(0);
-		Stream<Tweet> tweetLimit = user.getTweet().stream();
-		List<Tweet> tweetList = tweetLimit.collect(Collectors.toList());
-		tweetList.sort(new Comparator<Tweet>() {
-			@Override
-			public int compare(Tweet o1, Tweet o2) {
-				if( o1.getCreatedDate().before(o2.getCreatedDate()))
-				   return 1;
-				   else
-					   return -1;
-			}
-		});
-		List<Tweet> list = tweetList.stream()
-		.limit(10)
-		.collect(Collectors.toList());
-		
-		response.setStatus("success");
-		response.setMessage(list.toString());
+		try {
+			if (null == user || user.getEmail() == null || user.getEmail().length() == 0)
+				throw new UserException("Invalid User details ");
+			ResponseEntity<Response> responseEntity = validateToken(user, request);
+			if (!responseEntity.getStatusCode().equals(HttpStatus.OK))
+				return responseEntity;
+			user = userRepository.findByEmail(user.getEmail()).get(0);
+			Stream<Tweet> tweetLimit = user.getTweet().stream();
+			List<Tweet> tweetList = tweetLimit.collect(Collectors.toList());
+			tweetList.sort(new Comparator<Tweet>() {
+				@Override
+				public int compare(Tweet o1, Tweet o2) {
+					if (o1.getCreatedDate().before(o2.getCreatedDate()))
+						return 1;
+					else
+						return -1;
+				}
+			});
+			List<Tweet> list = tweetList.stream().limit(10).collect(Collectors.toList());
+			response.setStatus("success");
+			response.setMessage(list.toString());
+		} catch (Exception e) {
+			response.setStatus("error");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
@@ -333,14 +399,15 @@ public class UserService implements IUserService {
 		String token = request.getHeader("token");
 		List<LoginDetail> tokenUser = loginRepository.findByToken(token);
 		LOGGER.debug("token validation");
-		if (!tokenUser.isEmpty()) {
-			LoginDetail loginDetail = tokenUser.get(0);
-			if (!loginDetail.getEmail().equals(user.getEmail())) {
-				response.setStatus("error");
-				response.setMessage("Invalid Token");
-			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-			}
-		} else {
+		try {
+			if (!tokenUser.isEmpty()) {
+				LoginDetail loginDetail = tokenUser.get(0);
+				if (!loginDetail.getEmail().equals(user.getEmail()))
+					throw new TokenException("invalid token");
+			} else
+				throw new TokenException("invalid token");
+
+		} catch (TokenException e) {
 			response.setStatus("error");
 			response.setMessage("Invalid Token");
 			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
