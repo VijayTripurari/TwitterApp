@@ -104,7 +104,7 @@ public class User {
 	@Override
 	public String toString() {
 		return "User [userId=" + userId + ", emailAddress=" + email + ", password=" + password + ", name=" + name
-				+ ", gender=" + gender + ", tweet=" + tweet + ", followerList=" + followerList + "]";
+				+ ", gender=" + gender + ", followerList=" + followerList + "]";
 	}
 
 }

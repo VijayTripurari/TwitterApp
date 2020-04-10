@@ -67,6 +67,11 @@ public class Tweet {
 	public void setCreatedDate(Date createdDate) {
 		this.createdDate = createdDate;
 	}
+	/*
+	 * @Override public String toString() { return "Tweet [tweetId=" + tweetId +
+	 * ", tweetText=" + tweetText + ", likeTweet=" + likeTweet + ", createdDate=" +
+	 * createdDate + "]"; }
+	 */
 	@Override
 	public String toString() {
 		return "Tweet [tweetId=" + tweetId + ", tweetText=" + tweetText + ", likeTweet=" + likeTweet + ", createdDate="

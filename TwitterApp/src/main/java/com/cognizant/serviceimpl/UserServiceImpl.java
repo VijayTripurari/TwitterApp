@@ -339,7 +339,7 @@ public class UserServiceImpl implements IUserService {
 	 * @param request
 	 * @return
 	 */
-	public ResponseEntity<Response> home(/* User user, */ HttpServletRequest request) {
+	public ResponseEntity<Response> home( HttpServletRequest request) {
 		Response response = new Response();
 		try {
 			String header = request.getHeader("token");
@@ -348,14 +348,14 @@ public class UserServiceImpl implements IUserService {
 				throw new UserException("Email can not be empty");
 			String email = claims.getSubject();
 			User user = userRepository.findByEmail(email).get(0);
-			Stream<Tweet> tweetLimit = user.getTweet().stream();
-			List<Tweet> tweetList = tweetLimit.collect(Collectors.toList());
+			
+			List<Tweet> tweetList =user.getTweet();
 			LOGGER.debug("Sorting the Tweets in descending order of Date");
 			tweetList.sort((Tweet o1, Tweet o2) -> o1.getCreatedDate().before(o2.getCreatedDate()) ? 1 : -1);
 			List<Tweet> list = tweetList.stream().limit(10).collect(Collectors.toList());
 			LOGGER.debug("list : " + list);
 			response.setStatus("success");
-			response.setMessage(list);
+			response.setMessage(list.toString());
 
 		} catch (Exception e) {
 			response.setStatus("error");
