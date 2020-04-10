@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,14 +36,16 @@ public class UserController {
 	 return	userService.loginUser(user);
 	}
 	
+	
 	@PostMapping("/secure/follow")
 	public ResponseEntity<Response>  followUser(@RequestBody final FollowUser followUser, HttpServletRequest request) {
 	return userService.followUser(followUser,request);
    }
 	
-	@PostMapping("/secure/followers")
-	public ResponseEntity<Response>  getFollowers(@RequestBody final User user, HttpServletRequest request) {
-		return userService.getFollowers(user,request);
+	
+	@GetMapping("/secure/followers")
+	public ResponseEntity<Response> getFollowers( HttpServletRequest request) {
+		return userService.getFollowers(request);
 	   }
 	
 	@PostMapping("/secure/tweet")
@@ -54,9 +57,11 @@ public class UserController {
 	public ResponseEntity<Response>  likeTweet(@RequestBody final TweetLike likeTweet, HttpServletRequest request) {
 		return userService.likeTweet(likeTweet,request);
 	   }
-	@PostMapping("/secure/homeapi")
-	public ResponseEntity<Response>  home(@RequestBody final User user, HttpServletRequest request) {
-		return userService.home(user,request);
+
+	
+	 @GetMapping("/secure/homeapi") 
+	public ResponseEntity<Response> home( HttpServletRequest request) {
+		return userService.home(request);
 	   }
 	
 	
